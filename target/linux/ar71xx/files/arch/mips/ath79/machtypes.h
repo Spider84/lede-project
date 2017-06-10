@@ -77,6 +77,7 @@ enum ath79_mach_type {
 	ATH79_MACH_DIR_615_C1,			/* D-Link DIR-615 rev. C1 */
 	ATH79_MACH_DIR_615_E1,			/* D-Link DIR-615 rev. E1 */
 	ATH79_MACH_DIR_615_E4,			/* D-Link DIR-615 rev. E4 */
+	ATH79_MACH_DIR_615_E4_MOD,		/* D-Link DIR-615 rev. E4 Modded */
 	ATH79_MACH_DIR_615_I1,			/* D-Link DIR-615 rev. I1 */
 	ATH79_MACH_DIR_825_B1,			/* D-Link DIR-825 rev. B1 */
 	ATH79_MACH_DIR_825_C1,			/* D-Link DIR-825 rev. C1 */

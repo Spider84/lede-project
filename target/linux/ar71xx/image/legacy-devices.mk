@@ -227,6 +227,12 @@ define LegacyDevice/DIR615E4
 endef
 LEGACY_DEVICES += DIR615E4
 
+define LegacyDevice/DIR615E4MOD
+  DEVICE_TITLE := D-Link DIR-615 rev. E4 Modded
+  DEVICE_PACKAGES := kmod-usb-core kmod-usb-ohci kmod-usb-ledtrig-usbport
+endef
+LEGACY_DEVICES += DIR615E4MOD
+
 define LegacyDevice/DIR615I1
   DEVICE_TITLE := D-Link DIR-615 rev. I1
 endef

@@ -241,6 +241,7 @@ bxu2000n2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,1408k(kerne
 cameo_ap81_mtdlayout=mtdparts=spi0.0:128k(u-boot)ro,64k(config)ro,3840k(firmware),64k(art)ro
 cameo_ap91_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(nvram)ro,3712k(firmware),64k(mac)ro,64k(art)ro
 cameo_ap99_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(nvram)ro,3520k(firmware),64k(mac)ro,192k(lp)ro,64k(art)ro
+dir_615_e4_mtdlayout=mtdparts=spi0.0:256k(u-boot),64k(u-boot-env),15936k(firmware),64k(mac),64k(art)
 cameo_ap121_mtdlayout=mtdparts=spi0.0:64k(u-boot)ro,64k(art)ro,64k(mac)ro,64k(nvram)ro,192k(language)ro,3648k(firmware)
 cameo_ap121_mtdlayout_8M=mtdparts=spi0.0:64k(u-boot)ro,64k(art)ro,64k(mac)ro,64k(nvram)ro,256k(language)ro,7680k@0x80000(firmware)
 cameo_ap123_mtdlayout_4M=mtdparts=spi0.0:64k(u-boot)ro,64k(nvram)ro,3712k(firmware),192k(lang)ro,64k(art)ro
@@ -417,6 +418,10 @@ Image/Build/CameoAP91/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(cameo_
 Image/Build/CameoAP99/buildkernel=$(call MkuImageLzma,$(2),$(3) $(cameo_ap99_mtdlayout))
 Image/Build/CameoAP99=$(call Image/Build/Cameo,$(1),$(2),$(3),$(cameo_ap99_mtdlayout),$(4),65536)
 Image/Build/CameoAP99/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(cameo_ap99_mtdlayout))
+
+Image/Build/DIR615E4/buildkernel=$(call MkuImageGzip,$(2),$(3) $(dir_615_e4_mtdlayout))
+Image/Build/DIR615E4=$(call Image/Build/Cameo,$(1),$(2),$(3),$(dir_615_e4_mtdlayout),$(4),65536)
+Image/Build/DIR615E4/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(dir_615_e4_mtdlayout))
 
 Image/Build/CameoAP123_4M/buildkernel=$(call MkuImageLzma,$(2),$(3) $(cameo_ap123_mtdlayout_4M))
 Image/Build/CameoAP123_4M=$(call Image/Build/Cameo,$(1),$(2),$(3),$(cameo_ap123_mtdlayout_4M),$(4),26)
@@ -920,6 +925,7 @@ $(eval $(call SingleProfile,CameoAP91,64kraw,FR54RTR,fr-54rtr,DIR-600-A1,ttyS0,1
 $(eval $(call SingleProfile,CameoAP99,64kraw,EBR2310C1,ebr-2310-c1,EBR-2310-C1,ttyS0,115200,"AP91-AR7240-RT-090223-03"))
 $(eval $(call SingleProfile,CameoAP99,64kraw,DIR615E1,dir-615-e1,DIR-615-E1,ttyS0,115200,"AP93-AR7240-RT-081028-00"))
 $(eval $(call SingleProfile,CameoAP99,64kraw,DIR615E4,dir-615-e4,DIR-615-E4,ttyS0,115200,"AP99-AR7240-RT-091105-05"))
+$(eval $(call SingleProfile,DIR615E4,64kraw,DIR615E4MOD,dir-615-e4-mod,DIR-615-E4-MOD,ttyS0,115200,"AP99-AR7240-RT-091105-05"))
 
 $(eval $(call SingleProfile,CameoAP123_4M,64kraw,DIR615I1,dir-615-i1,DIR-615-I1,ttyS0,115200,"00DB120AR9341-RT-1012I1-00"))
 $(eval $(call SingleProfile,CameoAP123_4M,64kraw,DIR615I3,dir-615-i3,DIR-615-I1,ttyS0,115200,"00DB120AR9341-RT-101214-00"))

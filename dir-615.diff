@@ -1,0 +1,165 @@
+diff --git a/target/linux/ar71xx/config-4.4 b/target/linux/ar71xx/config-4.4
+index 6d0941b..f4c722f 100644
+--- a/target/linux/ar71xx/config-4.4
++++ b/target/linux/ar71xx/config-4.4
+@@ -247,7 +247,7 @@ CONFIG_CC_OPTIMIZE_FOR_SIZE=y
+ CONFIG_CEVT_R4K=y
+ CONFIG_CLKDEV_LOOKUP=y
+ CONFIG_CLONE_BACKWARDS=y
+-CONFIG_CMDLINE="rootfstype=squashfs,jffs2 noinitrd"
++CONFIG_CMDLINE="noinitrd"
+ CONFIG_CMDLINE_BOOL=y
+ # CONFIG_CMDLINE_OVERRIDE is not set
+ CONFIG_COMMON_CLK=y
+@@ -344,6 +344,8 @@ CONFIG_IRQ_DOMAIN=y
+ CONFIG_IRQ_FORCED_THREADING=y
+ CONFIG_IRQ_MIPS_CPU=y
+ CONFIG_IRQ_WORK=y
++CONFIG_KERNEL_GZIP=y
++# CONFIG_KERNEL_XZ is not set
+ CONFIG_LEDS_GPIO=y
+ CONFIG_LEDS_NU801=y
+ # CONFIG_LEDS_WNDR3700_USB is not set
+diff --git a/target/linux/ar71xx/files/arch/mips/ath79/mach-dir-600-a1.c b/target/linux/ar71xx/files/arch/mips/ath79/mach-dir-600-a1.c
+index 5e6134d..0a23571 100644
+--- a/target/linux/ar71xx/files/arch/mips/ath79/mach-dir-600-a1.c
++++ b/target/linux/ar71xx/files/arch/mips/ath79/mach-dir-600-a1.c
+@@ -17,6 +17,7 @@
+ #include "dev-eth.h"
+ #include "dev-gpio-buttons.h"
+ #include "dev-leds-gpio.h"
++#include "dev-usb.h"
+ #include "dev-m25p80.h"
+ #include "machtypes.h"
+ #include "nvram.h"
+@@ -37,6 +38,7 @@
+ #define DIR_600_A1_KEYS_POLL_INTERVAL		20	/* msecs */
+ #define DIR_600_A1_KEYS_DEBOUNCE_INTERVAL (3 * DIR_600_A1_KEYS_POLL_INTERVAL)
+ 
++#define DIR_615_E4_NVRAM_ADDR	0x1f040000
+ #define DIR_600_A1_NVRAM_ADDR	0x1f030000
+ #define DIR_600_A1_NVRAM_SIZE	0x10000
+ 
+@@ -95,9 +97,9 @@ static struct gpio_keys_button dir_600_a1_gpio_keys[] __initdata = {
+ 	}
+ };
+ 
+-static void __init dir_600_a1_setup(void)
++static void __init dir_600_a1_setup(const char *nvram)
+ {
+-	const char *nvram = (char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR);
++	 
+ 	u8 *ee = (u8 *) KSEG1ADDR(0x1fff1000);
+ 	u8 mac_buff[6];
+ 	u8 *mac = NULL;
+@@ -138,25 +140,35 @@ static void __init dir_600_a1_setup(void)
+ 	ap91_pci_init(ee, mac);
+ }
+ 
+-MIPS_MACHINE(ATH79_MACH_DIR_600_A1, "DIR-600-A1", "D-Link DIR-600 rev. A1",
+-	     dir_600_a1_setup);
+-
+-MIPS_MACHINE(ATH79_MACH_EBR_2310_C1, "EBR-2310-C1", "D-Link EBR-2310 rev. C1",
+-	     dir_600_a1_setup);
+-
+ static void __init dir_615_e1_setup(void)
+ {
+-	dir_600_a1_setup();
++	dir_600_a1_setup((char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR));
+ }
+ 
++MIPS_MACHINE(ATH79_MACH_DIR_600_A1, "DIR-600-A1", "D-Link DIR-600 rev. A1",
++	     dir_600_e1_setup);
++
++MIPS_MACHINE(ATH79_MACH_EBR_2310_C1, "EBR-2310-C1", "D-Link EBR-2310 rev. C1",
++	     dir_600_e1_setup);
++
+ MIPS_MACHINE(ATH79_MACH_DIR_615_E1, "DIR-615-E1", "D-Link DIR-615 rev. E1",
+ 	     dir_615_e1_setup);
+ 
+ static void __init dir_615_e4_setup(void)
+ {
+-	dir_600_a1_setup();
++	dir_600_a1_setup((char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR));
+ 	ap9x_pci_setup_wmac_led_pin(0, 1);
+ }
+ 
+ MIPS_MACHINE(ATH79_MACH_DIR_615_E4, "DIR-615-E4", "D-Link DIR-615 rev. E4",
+ 	     dir_615_e4_setup);
++
++static void __init dir_615_e4_mod_setup(void)
++{
++	dir_600_a1_setup((char *) KSEG1ADDR(DIR_615_E4_NVRAM_ADDR));
++	ap9x_pci_setup_wmac_led_pin(0, 1);
++	ath79_register_usb();
++}
++
++MIPS_MACHINE(ATH79_MACH_DIR_615_E4_MOD, "DIR-615-E4-MOD", "D-Link DIR-615 rev. E4 Modded",
++	     dir_615_e4_mod_setup);
+diff --git a/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h b/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
+index 4278f5e..394019f 100644
+--- a/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
++++ b/target/linux/ar71xx/files/arch/mips/ath79/machtypes.h
+@@ -77,6 +77,7 @@ enum ath79_mach_type {
+ 	ATH79_MACH_DIR_615_C1,			/* D-Link DIR-615 rev. C1 */
+ 	ATH79_MACH_DIR_615_E1,			/* D-Link DIR-615 rev. E1 */
+ 	ATH79_MACH_DIR_615_E4,			/* D-Link DIR-615 rev. E4 */
++	ATH79_MACH_DIR_615_E4_MOD,		/* D-Link DIR-615 rev. E4 Modded */
+ 	ATH79_MACH_DIR_615_I1,			/* D-Link DIR-615 rev. I1 */
+ 	ATH79_MACH_DIR_825_B1,			/* D-Link DIR-825 rev. B1 */
+ 	ATH79_MACH_DIR_825_C1,			/* D-Link DIR-825 rev. C1 */
+diff --git a/target/linux/ar71xx/generic/config-default b/target/linux/ar71xx/generic/config-default
+index 4516968..23dd450 100644
+--- a/target/linux/ar71xx/generic/config-default
++++ b/target/linux/ar71xx/generic/config-default
+@@ -1 +1 @@
+-CONFIG_CMDLINE="rootfstype=squashfs,jffs2 noinitrd"
++CONFIG_CMDLINE="noinitrd"
+diff --git a/target/linux/ar71xx/image/legacy-devices.mk b/target/linux/ar71xx/image/legacy-devices.mk
+index b746431..ab5fce8 100644
+--- a/target/linux/ar71xx/image/legacy-devices.mk
++++ b/target/linux/ar71xx/image/legacy-devices.mk
+@@ -227,6 +227,12 @@ define LegacyDevice/DIR615E4
+ endef
+ LEGACY_DEVICES += DIR615E4
+ 
++define LegacyDevice/DIR615E4MOD
++  DEVICE_TITLE := D-Link DIR-615 rev. E4 Modded
++  DEVICE_PACKAGES := kmod-usb-core kmod-usb-ohci kmod-usb-ledtrig-usbport
++endef
++LEGACY_DEVICES += DIR615E4MOD
++
+ define LegacyDevice/DIR615I1
+   DEVICE_TITLE := D-Link DIR-615 rev. I1
+ endef
+diff --git a/target/linux/ar71xx/image/legacy.mk b/target/linux/ar71xx/image/legacy.mk
+index 7cfc12a..f7966eb 100644
+--- a/target/linux/ar71xx/image/legacy.mk
++++ b/target/linux/ar71xx/image/legacy.mk
+@@ -241,6 +241,7 @@ bxu2000n2_mtdlayout=mtdparts=spi0.0:256k(u-boot)ro,64k(u-boot-env)ro,1408k(kerne
+ cameo_ap81_mtdlayout=mtdparts=spi0.0:128k(u-boot)ro,64k(config)ro,3840k(firmware),64k(art)ro
+ cameo_ap91_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(nvram)ro,3712k(firmware),64k(mac)ro,64k(art)ro
+ cameo_ap99_mtdlayout=mtdparts=spi0.0:192k(u-boot)ro,64k(nvram)ro,3520k(firmware),64k(mac)ro,192k(lp)ro,64k(art)ro
++dir_615_e4_mtdlayout=mtdparts=spi0.0:256k(u-boot),64k(u-boot-env),15936k(firmware),64k(mac),64k(art)
+ cameo_ap121_mtdlayout=mtdparts=spi0.0:64k(u-boot)ro,64k(art)ro,64k(mac)ro,64k(nvram)ro,192k(language)ro,3648k(firmware)
+ cameo_ap121_mtdlayout_8M=mtdparts=spi0.0:64k(u-boot)ro,64k(art)ro,64k(mac)ro,64k(nvram)ro,256k(language)ro,7680k@0x80000(firmware)
+ cameo_ap123_mtdlayout_4M=mtdparts=spi0.0:64k(u-boot)ro,64k(nvram)ro,3712k(firmware),192k(lang)ro,64k(art)ro
+@@ -418,6 +419,10 @@ Image/Build/CameoAP99/buildkernel=$(call MkuImageLzma,$(2),$(3) $(cameo_ap99_mtd
+ Image/Build/CameoAP99=$(call Image/Build/Cameo,$(1),$(2),$(3),$(cameo_ap99_mtdlayout),$(4),65536)
+ Image/Build/CameoAP99/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(cameo_ap99_mtdlayout))
+ 
++Image/Build/DIR615E4/buildkernel=$(call MkuImageGzip,$(2),$(3) $(dir_615_e4_mtdlayout))
++Image/Build/DIR615E4=$(call Image/Build/Cameo,$(1),$(2),$(3),$(dir_615_e4_mtdlayout),$(4),65536)
++Image/Build/DIR615E4/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(dir_615_e4_mtdlayout))
++
+ Image/Build/CameoAP123_4M/buildkernel=$(call MkuImageLzma,$(2),$(3) $(cameo_ap123_mtdlayout_4M))
+ Image/Build/CameoAP123_4M=$(call Image/Build/Cameo,$(1),$(2),$(3),$(cameo_ap123_mtdlayout_4M),$(4),26)
+ Image/Build/CameoAP123_4M/initramfs=$(call MkuImageLzma/initramfs,$(2),$(3) $(cameo_ap123_mtdlayout_4M))
+@@ -920,6 +925,7 @@ $(eval $(call SingleProfile,CameoAP91,64kraw,FR54RTR,fr-54rtr,DIR-600-A1,ttyS0,1
+ $(eval $(call SingleProfile,CameoAP99,64kraw,EBR2310C1,ebr-2310-c1,EBR-2310-C1,ttyS0,115200,"AP91-AR7240-RT-090223-03"))
+ $(eval $(call SingleProfile,CameoAP99,64kraw,DIR615E1,dir-615-e1,DIR-615-E1,ttyS0,115200,"AP93-AR7240-RT-081028-00"))
+ $(eval $(call SingleProfile,CameoAP99,64kraw,DIR615E4,dir-615-e4,DIR-615-E4,ttyS0,115200,"AP99-AR7240-RT-091105-05"))
++$(eval $(call SingleProfile,DIR615E4,64kraw,DIR615E4MOD,dir-615-e4-mod,DIR-615-E4-MOD,ttyS0,115200,"AP99-AR7240-RT-091105-05"))
+ 
+ $(eval $(call SingleProfile,CameoAP123_4M,64kraw,DIR615I1,dir-615-i1,DIR-615-I1,ttyS0,115200,"00DB120AR9341-RT-1012I1-00"))
+ $(eval $(call SingleProfile,CameoAP123_4M,64kraw,DIR615I3,dir-615-i3,DIR-615-I1,ttyS0,115200,"00DB120AR9341-RT-101214-00"))

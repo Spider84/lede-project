@@ -17,6 +17,7 @@
 #include "dev-eth.h"
 #include "dev-gpio-buttons.h"
 #include "dev-leds-gpio.h"
+#include "dev-usb.h"
 #include "dev-m25p80.h"
 #include "machtypes.h"
 #include "nvram.h"
@@ -37,6 +38,7 @@
 #define DIR_600_A1_KEYS_POLL_INTERVAL		20	/* msecs */
 #define DIR_600_A1_KEYS_DEBOUNCE_INTERVAL (3 * DIR_600_A1_KEYS_POLL_INTERVAL)
 
+#define DIR_615_E4_NVRAM_ADDR	0x1f040000
 #define DIR_600_A1_NVRAM_ADDR	0x1f030000
 #define DIR_600_A1_NVRAM_SIZE	0x10000
 
@@ -95,9 +97,9 @@ static struct gpio_keys_button dir_600_a1_gpio_keys[] __initdata = {
 	}
 };
 
-static void __init dir_600_a1_setup(void)
+static void __init dir_600_a1_setup(const char *nvram)
 {
-	const char *nvram = (char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR);
+	 
 	u8 *ee = (u8 *) KSEG1ADDR(0x1fff1000);
 	u8 mac_buff[6];
 	u8 *mac = NULL;
@@ -138,25 +140,35 @@ static void __init dir_600_a1_setup(void)
 	ap91_pci_init(ee, mac);
 }
 
-MIPS_MACHINE(ATH79_MACH_DIR_600_A1, "DIR-600-A1", "D-Link DIR-600 rev. A1",
-	     dir_600_a1_setup);
-
-MIPS_MACHINE(ATH79_MACH_EBR_2310_C1, "EBR-2310-C1", "D-Link EBR-2310 rev. C1",
-	     dir_600_a1_setup);
-
-static void __init dir_615_e1_setup(void)
+static void __init dir_600_e1_setup(void)
 {
-	dir_600_a1_setup();
+	dir_600_a1_setup((char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR));
 }
 
+MIPS_MACHINE(ATH79_MACH_DIR_600_A1, "DIR-600-A1", "D-Link DIR-600 rev. A1",
+	     dir_600_e1_setup);
+
+MIPS_MACHINE(ATH79_MACH_EBR_2310_C1, "EBR-2310-C1", "D-Link EBR-2310 rev. C1",
+	     dir_600_e1_setup);
+
 MIPS_MACHINE(ATH79_MACH_DIR_615_E1, "DIR-615-E1", "D-Link DIR-615 rev. E1",
-	     dir_615_e1_setup);
+	     dir_600_e1_setup);
 
 static void __init dir_615_e4_setup(void)
 {
-	dir_600_a1_setup();
+	dir_600_a1_setup((char *) KSEG1ADDR(DIR_600_A1_NVRAM_ADDR));
 	ap9x_pci_setup_wmac_led_pin(0, 1);
 }
 
 MIPS_MACHINE(ATH79_MACH_DIR_615_E4, "DIR-615-E4", "D-Link DIR-615 rev. E4",
 	     dir_615_e4_setup);
+
+static void __init dir_615_e4_mod_setup(void)
+{
+	dir_600_a1_setup((char *) KSEG1ADDR(DIR_615_E4_NVRAM_ADDR));
+	ap9x_pci_setup_wmac_led_pin(0, 1);
+	ath79_register_usb();
+}
+
+MIPS_MACHINE(ATH79_MACH_DIR_615_E4_MOD, "DIR-615-E4-MOD", "D-Link DIR-615 rev. E4 Modded",
+	     dir_615_e4_mod_setup);
